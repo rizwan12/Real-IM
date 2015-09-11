@@ -1,6 +1,7 @@
 package rizwansaleem.realim.Application;
 
 import android.app.Application;
+import android.content.Context;
 
 import com.parse.Parse;
 import com.parse.ParseInstallation;
@@ -12,6 +13,8 @@ import rizwansaleem.realim.utility.Constants;
  * Created by rizwansaleem on 10/09/15.
  */
 public class RealIMApplication extends Application {
+
+    public static Context mContext;
 
     /*
      * Override onCreate Method of application which is called whenever the app ran.
@@ -29,5 +32,6 @@ public class RealIMApplication extends Application {
         ParseInstallation.getCurrentInstallation().saveInBackground();
 
         ParsePush.subscribeInBackground(Constants.CHANNEL_NAME);
+        mContext = getApplicationContext();
     }
 }

@@ -2,6 +2,8 @@ package rizwansaleem.realim.fragment;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -26,6 +28,8 @@ import com.parse.ParseObject;
 import com.parse.ParsePush;
 import com.parse.ParseQuery;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +37,7 @@ import rizwansaleem.realim.R;
 import rizwansaleem.realim.adapter.ChatViewAdapter;
 import rizwansaleem.realim.network.NetworkHelper;
 import rizwansaleem.realim.objects.ChatObject;
+import rizwansaleem.realim.receiver.RealReceiver;
 import rizwansaleem.realim.utility.Constants;
 
 /**
@@ -51,6 +56,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
 
     String name = "";
 
+    private RealReceiver mReceiver;
+    private IntentFilter filter;
 
     public ChatFragment() {
 
@@ -73,6 +80,15 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        filter = new IntentFilter("action");
+        mReceiver = new RealReceiver() {
+            @Override
+            protected void onPushReceive(Context context, Intent intent) {
+                super.onPushReceive(context, intent);
+                Log.e("","***********************************************************************************");
+            }
+        };
     }
 
     /**
@@ -147,6 +163,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
+        getActivity().registerReceiver(mReceiver, filter);
     }
 
     /**
@@ -157,6 +174,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onPause() {
         super.onPause();
+        getActivity().unregisterReceiver(mReceiver);
     }
 
     /**
@@ -181,7 +199,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                     chatAdapter.setChatList(mChatList);
                     chatAdapter.notifyDataSetChanged();
                     hideKeyboard();
-                    sendPushNotification();
+                    sendPushNotification(object);
                 } else {
                     Toast.makeText(mContext, "Please Enter SOmething", Toast.LENGTH_SHORT).show();
                 }
@@ -305,12 +323,17 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         return chatList;
     }
 
-    private void sendPushNotification() {
-        ParsePush push = new ParsePush();
-        push.setChannel(Constants.CHANNEL_NAME);
-        push.setMessage("The Message just scored! It's now 2-2 against the Mets.");
-        push.sendInBackground();
-        Log.e("xxxxxxx","Push Notification Sent");
+    private void sendPushNotification(ChatObject object) {
+        try {
+            JSONObject data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "!\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+            ParsePush push = new ParsePush();
+            push.setChannel(Constants.CHANNEL_NAME);
+            push.setData(data);
+            push.sendInBackground();
+            Log.e("xxxxxxx","Push Notification Sent");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void hideKeyboard() {
