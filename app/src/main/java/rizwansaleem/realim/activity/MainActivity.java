@@ -1,5 +1,9 @@
 package rizwansaleem.realim.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -10,8 +14,29 @@ import android.view.MenuItem;
 import rizwansaleem.realim.R;
 import rizwansaleem.realim.fragment.ChatFragment;
 import rizwansaleem.realim.fragment.MainActivityFragment;
+import rizwansaleem.realim.objects.ChatObject;
 
 public class MainActivity extends FragmentActivity implements MainActivityFragment.OnNickNameEnteredListener {
+
+    // Add this inside your class
+    BroadcastReceiver broadcastReceiver =  new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Bundle b = intent.getExtras();
+
+            String name = b.getString("name");
+            String text = b.getString("message");
+            boolean isImage = b.getBoolean("isImage");
+            ChatObject object = new ChatObject(name, text, new byte[0], isImage);
+
+            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment);
+            if (currentFragment instanceof ChatFragment) {
+                ChatFragment fragment = (ChatFragment) currentFragment;
+                fragment.addObjectAndUpdate(object);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +44,7 @@ public class MainActivity extends FragmentActivity implements MainActivityFragme
         setContentView(R.layout.activity_main);
         MainActivityFragment mainFragment = new MainActivityFragment();
         moveToNextFragment(mainFragment);
+        registerReceiver(broadcastReceiver, new IntentFilter("broadCastName"));
     }
 
 

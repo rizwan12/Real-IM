@@ -341,4 +341,14 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
     }
 
+    public void addObjectAndUpdate(ChatObject object) {
+        if(object.getChatName().equals(name)) {
+            // Do no do something here for now.
+        } else {
+            mChatList.add(object);
+            chatAdapter.setChatList(mChatList);
+            chatAdapter.notifyDataSetChanged();
+        }
+    }
+
 }

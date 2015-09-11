@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.parse.ParsePushBroadcastReceiver;
 
@@ -28,6 +29,14 @@ public class RealReceiver extends ParsePushBroadcastReceiver {
                 String text = (String) myObject.getString("message");
                 boolean isImage = (boolean) myObject.getBoolean("isImage");
                 ChatObject object = new ChatObject(name, text, new byte[0], isImage);
+                Bundle extras = intent.getExtras();
+                Intent i = new Intent("broadCastName");
+                // Data you need to pass to activity
+                i.putExtra("name", name);
+                i.putExtra("message", text);
+                i.putExtra("isImage", isImage);
+
+                context.sendBroadcast(i);
             } catch (Exception e) {
 
             }
