@@ -13,6 +13,7 @@ public class Constants {
     public static final String  CHAT_NAME = "chat_name";
     public static final String  CHAT_TEXT = "chat_text";
     public static final String  CHAT_IMAGE = "chat_image";
+    public static final String  CHAT_URL = "chat_URL";
     public static final String  CHAT_IS_IMAGE = "chat_is_image";
     // --
     public static final String CHANNEL_NAME = "Message";

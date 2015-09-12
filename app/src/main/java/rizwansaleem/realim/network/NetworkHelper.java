@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.SaveCallback;
@@ -46,7 +47,8 @@ public class NetworkHelper {
         ParseObject chat = new ParseObject("ChatObject");
         chat.put(Constants.CHAT_NAME, object.getChatName());
         chat.put(Constants.CHAT_TEXT, object.getChatText());
-        chat.put(Constants.CHAT_IMAGE, "");
+        chat.put(Constants.CHAT_IMAGE, object.getImageData());
+        chat.put(Constants.CHAT_URL, object.getImageUrl());
         chat.put(Constants.CHAT_IS_IMAGE, object.isImage());
         chat.saveInBackground(new SaveCallback() {
             @Override
@@ -82,10 +84,10 @@ public class NetworkHelper {
             ParseObject object = list.get(count);
             String chatName = (String) object.get(Constants.CHAT_NAME);
             String chatText = (String) object.get(Constants.CHAT_TEXT);
-            byte[] chatImage = new byte[10];//(byte[]) object.get(Constants.CHAT_IMAGE);
+            ParseFile chatImage = (ParseFile) object.get(Constants.CHAT_IMAGE);
             boolean isImage = (boolean) object.get(Constants.CHAT_IS_IMAGE);
             // --
-            ChatObject chatObject = new ChatObject(chatName, chatText, chatImage, isImage);
+            ChatObject chatObject = new ChatObject(chatName, chatText, chatImage, "", isImage);
             chatList.add(chatObject);
         }
         return chatList;

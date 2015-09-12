@@ -12,8 +12,6 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import rizwansaleem.realim.objects.ChatObject;
-
 /**
  * Created by rizwansaleem on 11/09/15.
  */
@@ -28,13 +26,19 @@ public class RealReceiver extends ParsePushBroadcastReceiver {
                 String name = (String) myObject.getString("name");
                 String text = (String) myObject.getString("message");
                 boolean isImage = (boolean) myObject.getBoolean("isImage");
-                ChatObject object = new ChatObject(name, text, new byte[0], isImage);
+                String imageUrl = "";
+                if(isImage) {
+                    imageUrl = (String) myObject.get("imageUrl");
+                }
                 Bundle extras = intent.getExtras();
                 Intent i = new Intent("broadCastName");
                 // Data you need to pass to activity
                 i.putExtra("name", name);
                 i.putExtra("message", text);
                 i.putExtra("isImage", isImage);
+                if(isImage) {
+                    i.putExtra("imageUrl", imageUrl);
+                }
 
                 context.sendBroadcast(i);
             } catch (Exception e) {

@@ -1,22 +1,26 @@
 package rizwansaleem.realim.activity;
 
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.parse.ParseFile;
 
 import rizwansaleem.realim.R;
 import rizwansaleem.realim.fragment.ChatFragment;
 import rizwansaleem.realim.fragment.MainActivityFragment;
 import rizwansaleem.realim.objects.ChatObject;
 
-public class MainActivity extends FragmentActivity implements MainActivityFragment.OnNickNameEnteredListener {
+public class MainActivity extends ActionBarActivity implements MainActivityFragment.OnNickNameEnteredListener {
 
     // Add this inside your class
     BroadcastReceiver broadcastReceiver =  new BroadcastReceiver() {
@@ -28,7 +32,12 @@ public class MainActivity extends FragmentActivity implements MainActivityFragme
             String name = b.getString("name");
             String text = b.getString("message");
             boolean isImage = b.getBoolean("isImage");
-            ChatObject object = new ChatObject(name, text, new byte[0], isImage);
+            String imageUrl = "";
+            if(isImage) {
+                imageUrl = b.getString("imageUrl");
+            }
+            ParseFile file = (ParseFile) b.get("");
+            ChatObject object = new ChatObject(name, text, file, imageUrl, isImage);
 
             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment);
             if (currentFragment instanceof ChatFragment) {
@@ -42,11 +51,23 @@ public class MainActivity extends FragmentActivity implements MainActivityFragme
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(false);
         MainActivityFragment mainFragment = new MainActivityFragment();
         moveToNextFragment(mainFragment);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter("broadCastName"));
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -61,11 +82,6 @@ public class MainActivity extends FragmentActivity implements MainActivityFragme
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
     }

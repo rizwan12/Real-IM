@@ -1,14 +1,18 @@
 package rizwansaleem.realim.fragment;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,12 +28,16 @@ import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParsePush;
 import com.parse.ParseQuery;
+import com.parse.SaveCallback;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +45,6 @@ import rizwansaleem.realim.R;
 import rizwansaleem.realim.adapter.ChatViewAdapter;
 import rizwansaleem.realim.network.NetworkHelper;
 import rizwansaleem.realim.objects.ChatObject;
-import rizwansaleem.realim.receiver.RealReceiver;
 import rizwansaleem.realim.utility.Constants;
 
 /**
@@ -53,11 +60,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     private List<ChatObject> mChatList = new ArrayList<ChatObject>();
     private EditText mText;
     private Button sendButton;
+    private Uri imageUri;
 
     String name = "";
-
-    private RealReceiver mReceiver;
-    private IntentFilter filter;
 
     public ChatFragment() {
 
@@ -80,15 +85,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        filter = new IntentFilter("action");
-        mReceiver = new RealReceiver() {
-            @Override
-            protected void onPushReceive(Context context, Intent intent) {
-                super.onPushReceive(context, intent);
-                Log.e("","***********************************************************************************");
-            }
-        };
     }
 
     /**
@@ -113,6 +109,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         mainView = inflater.inflate(R.layout.fragment_chat, container, false);
         name = this.getArguments().getString(ChatFragment.NICKNAME);
         initUIComponents();
@@ -163,7 +160,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().registerReceiver(mReceiver, filter);
     }
 
     /**
@@ -174,7 +170,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onPause() {
         super.onPause();
-        getActivity().unregisterReceiver(mReceiver);
     }
 
     /**
@@ -192,7 +187,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         switch (v.getId()) {
             case R.id.chat_send:
                 if(mText.getText().toString().length() > 0) {
-                    ChatObject object = new ChatObject(name, mText.getText().toString(), new byte[0], false);
+                    ChatObject object = new ChatObject(name, mText.getText().toString(), null, "", false);
                     mText.setText("");
                     mChatList.add(object);
                     NetworkHelper.getInstance().saveChatObject(object);
@@ -216,9 +211,10 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
      */
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        inflater.inflate(R.menu.global, menu);
-        showGlobalContextActionBar();
         super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_global, menu);
+        showGlobalContextActionBar();
     }
 
     /**
@@ -233,6 +229,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
             case android.R.id.home:
                 // Called to pop current fragment from the fragment manager and display the home screen.
                 BackPressed();
+                return true;
+            case R.id.action_camera:
+                takePhoto();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -255,7 +254,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
      * @return Action bar instance. (android.support.v7)
      */
     private ActionBar getActionBar() {
-        return ((ActionBarActivity) getActivity()).getSupportActionBar();
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
     /**
@@ -314,10 +313,14 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
             ParseObject object = list.get(count);
             String chatName = (String) object.get(Constants.CHAT_NAME);
             String chatText = (String) object.get(Constants.CHAT_TEXT);
-            byte[] chatImage = new byte[10];//(byte[]) object.get(Constants.CHAT_IMAGE);
+            ParseFile chatImage = (ParseFile) object.get(Constants.CHAT_IMAGE);//(byte[]) object.get(Constants.CHAT_IMAGE);
             boolean isImage = (boolean) object.get(Constants.CHAT_IS_IMAGE);
+            String imageUrl = "";
+            if(isImage) {
+                imageUrl = (String) object.get(Constants.CHAT_URL);
+            }
             // --
-            ChatObject chatObject = new ChatObject(chatName, chatText, chatImage, isImage);
+            ChatObject chatObject = new ChatObject(chatName, chatText, chatImage, imageUrl, isImage);
             chatList.add(chatObject);
         }
         return chatList;
@@ -325,7 +328,12 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
 
     private void sendPushNotification(ChatObject object) {
         try {
-            JSONObject data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "!\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+            JSONObject data = null;
+            if(object.isImage()) {
+                data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "\", \"imageUrl\": \" " + object.getImageUrl() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+            } else {
+                data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+            }
             ParsePush push = new ParsePush();
             push.setChannel(Constants.CHANNEL_NAME);
             push.setData(data);
@@ -351,4 +359,72 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+    public void takePhoto() {
+        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        File photo = new File(Environment.getExternalStorageDirectory(),  "Pic.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT,
+                Uri.fromFile(photo));
+        imageUri = Uri.fromFile(photo);
+        startActivityForResult(intent, 100);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case 100:
+                if (resultCode == Activity.RESULT_OK) {
+                    Uri selectedImage = imageUri;
+                    getActivity().getContentResolver().notifyChange(selectedImage, null);
+                    ContentResolver cr = getActivity().getContentResolver();
+                    Bitmap bitmap;
+                    try {
+                        bitmap = android.provider.MediaStore.Images.Media
+                                .getBitmap(cr, selectedImage);
+                        createChatObjectWithImage(bitmap);
+
+//                        viewHolder.imageView.setImageBitmap(bitmap);
+                        Toast.makeText(getActivity(), selectedImage.toString(),
+                                Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(getActivity(), "Failed to load", Toast.LENGTH_SHORT)
+                                .show();
+                        Log.e("Camera", e.toString());
+                    }
+                }
+        }
+    }
+
+    private void createChatObjectWithImage(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+        byte[] data = stream.toByteArray();
+
+        final ParseFile file = new ParseFile("image1", data);
+        final String url = file.getUrl();
+        file.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                final ChatObject chatObject = new ChatObject();
+                chatObject.setChatName(name);
+                chatObject.setChatText("");
+                chatObject.setImageData(file);
+                chatObject.setImageUrl(file.getUrl());
+                chatObject.setIsImage(true);
+
+                NetworkHelper.getInstance().saveChatObject(chatObject);
+                sendPushNotification(chatObject);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mChatList.add(chatObject);
+                        chatAdapter.setChatList(mChatList);
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        });
+
+
+    }
 }

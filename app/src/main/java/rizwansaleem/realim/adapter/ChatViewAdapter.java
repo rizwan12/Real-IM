@@ -8,6 +8,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 import rizwansaleem.realim.R;
@@ -56,20 +58,19 @@ public class ChatViewAdapter extends BaseAdapter {
 
             viewHolder = new ChatViewHolder();
             viewHolder.nameText = (TextView) row.findViewById(R.id.name_text);
-            if(chatObject.isImage()) {
-                viewHolder.chatImage = (ImageView) row.findViewById(R.id.chat_image);
-            } else {
-                viewHolder.chatText = (TextView) row.findViewById(R.id.chat_text);
-            }
+            viewHolder.chatImage = (ImageView) row.findViewById(R.id.chat_image);
+            viewHolder.chatText = (TextView) row.findViewById(R.id.chat_text);
             row.setTag(viewHolder);
         } else {
             viewHolder = (ChatViewHolder) row.getTag();
         }
         viewHolder.nameText.setText(chatObject.getChatName());
         if(chatObject.isImage()) {
-
+            Picasso.with(mContext).load(chatObject.getImageUrl()).placeholder(R.drawable.placeholder).resize(600,600).centerCrop().into(viewHolder.chatImage);
+            viewHolder.chatText.setVisibility(View.GONE);
         } else {
             viewHolder.chatText.setText(chatObject.getChatText());
+            viewHolder.chatImage.setVisibility(View.GONE);
         }
         return row;
     }
