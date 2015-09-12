@@ -3,6 +3,7 @@ package rizwansaleem.realim.fragment;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -165,6 +167,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
+        retrieveChatList();
     }
 
     /**
@@ -234,18 +237,13 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         switch (item.getItemId()) {
             case android.R.id.home:
                 // Called to pop current fragment from the fragment manager and display the home screen.
-                if(!isLoading) {
-                    BackPressed();
-                }
+                createAndShowAlertDialog();
                 return true;
             case R.id.action_camera:
                 takePhoto();
                 return true;
             case R.id.action_logout:
-                SharedPreferences.Editor editor = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE).edit();
-                editor.remove(Constants.USERNAME);
-                editor.commit();
-                BackPressed();
+                createAndShowAlertDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -296,10 +294,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         sendButton.setOnClickListener(this);
         mProgressBar = (ProgressBar) mainView.findViewById(R.id.progress);
         mProgressBar.setVisibility(View.VISIBLE);
-        retreiveChatList();
     }
 
-    public void retreiveChatList() {
+    public void retrieveChatList() {
         isLoading = true;
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatObject");
         query.addDescendingOrder("CreatedAt");
@@ -454,5 +451,26 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                 });
             }
         });
+    }
+
+    private void createAndShowAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Are you sure you want to logout?");
+        builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                SharedPreferences.Editor editor = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE).edit();
+                editor.remove(Constants.USERNAME);
+                editor.commit();
+                BackPressed();
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

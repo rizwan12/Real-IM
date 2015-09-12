@@ -21,6 +21,7 @@ public class RealReceiver extends ParsePushBroadcastReceiver {
     protected void onPushReceive(Context context, Intent intent) {
         if(isAppForground(context)) {
             try {
+                super.onPushReceive(context, intent);
                 JSONObject pushData = new JSONObject(intent.getStringExtra("com.parse.Data"));
                 JSONObject myObject = pushData.getJSONObject("message");
                 String name = (String) myObject.getString("name");
