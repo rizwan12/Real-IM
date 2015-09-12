@@ -32,5 +32,22 @@ If the app is in background then a Push Notification is generated that whenever 
 	
 Once user have logged in, user will remain in the chat room with the same name.
 
-There is no logout mechanism for now. But it can be implemented by clearing the user details from Backend and device so whenever the user will come back, they can get in the chatroom with a new name.
+Logout mechanism is also implemented using SharedPreferences.
+
+"Picassa" library is used as third party library to laod images in the view holders.
+
+Timeline I followed while Implementing:
+- Divide work in different modules.
+- First created UI and create initial classes and packages.
+- Then created Activity and fragment mechanism.
+- Then started working on Signing in thing. In signing in it saves and register the device at the backend.
+- After signing in phase worked on creating a chat message (offline in which messages get refreshed manually)
+- Searched for third party solutions. There were many available but if they have implemented then why not me. So tried one using Push Messages.
+- Created a mechanism using the power of Push Messages to make it real time on page. 
+- Implemented the whole mechanism and started testing.
+- Tested for almost a half day and improved different features and introduced some small new things with which app looks good.
+
+Things that can be improved:
+- UI can be enhanced.
+- More functionality can be added like different rooms. User can join any room to chat.
 
