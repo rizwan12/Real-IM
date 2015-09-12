@@ -2,15 +2,11 @@ package rizwansaleem.realim.network;
 
 import android.util.Log;
 
-import com.parse.FindCallback;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.SaveCallback;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import rizwansaleem.realim.objects.ChatObject;
 import rizwansaleem.realim.utility.Constants;
@@ -57,41 +53,5 @@ public class NetworkHelper {
             }
         });
     }
-
-    public ArrayList<ChatObject> retreiveChatList() {
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatObject");
-        query.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> list, ParseException e) {
-                if (list != null) {
-                    Log.e(TAG, "********************************* Size OF LIST : " + list.size());
-                    if (list.size() > 0) {
-                        mChatList = createChatList(list);
-                        Log.e(TAG, "********************************* Size OF MCHATLIST : " + mChatList.size());
-                    }
-
-                } else {
-                    Log.d(TAG, "Error: " + e.getMessage());
-                }
-            }
-        });
-        return mChatList;
-    }
-
-    private ArrayList<ChatObject> createChatList(List<ParseObject> list) {
-        ArrayList<ChatObject> chatList = new ArrayList<ChatObject>();
-        for(int count = 0; count < list.size(); count++) {
-            ParseObject object = list.get(count);
-            String chatName = (String) object.get(Constants.CHAT_NAME);
-            String chatText = (String) object.get(Constants.CHAT_TEXT);
-            ParseFile chatImage = (ParseFile) object.get(Constants.CHAT_IMAGE);
-            boolean isImage = (boolean) object.get(Constants.CHAT_IS_IMAGE);
-            // --
-            ChatObject chatObject = new ChatObject(chatName, chatText, chatImage, "", isImage);
-            chatList.add(chatObject);
-        }
-        return chatList;
-    }
-
 
 }
