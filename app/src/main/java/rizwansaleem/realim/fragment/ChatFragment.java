@@ -187,7 +187,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         switch (v.getId()) {
             case R.id.chat_send:
                 if(mText.getText().toString().length() > 0) {
-                    ChatObject object = new ChatObject(name, mText.getText().toString(), null, "", false);
+                    ParseFile file = new ParseFile(new byte[0]);
+                    ChatObject object = new ChatObject(name, mText.getText().toString(), file, "", false);
                     mText.setText("");
                     mChatList.add(object);
                     NetworkHelper.getInstance().saveChatObject(object);
