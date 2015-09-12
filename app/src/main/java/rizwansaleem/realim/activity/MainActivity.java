@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,9 +20,11 @@ import rizwansaleem.realim.fragment.ChatFragment;
 import rizwansaleem.realim.fragment.MainActivityFragment;
 import rizwansaleem.realim.objects.ChatObject;
 
-public class MainActivity extends ActionBarActivity implements MainActivityFragment.OnNickNameEnteredListener {
+public class MainActivity extends AppCompatActivity implements MainActivityFragment.OnNickNameEnteredListener {
 
-    // Add this inside your class
+    /**
+     * A broadcast receiver to receive message broadcast from RealReceiver.
+     */
     BroadcastReceiver broadcastReceiver =  new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

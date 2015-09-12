@@ -18,7 +18,7 @@
         android:layout_height="fill_parent"
         android:drawSelectorOnTop="false"
         android:layout_marginBottom="45dp"
-        android:dividerHeight="5dp"
+        android:dividerHeight="3dp"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll"/>
 

@@ -4,7 +4,6 @@ import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 
 import com.parse.ParsePushBroadcastReceiver;
 
@@ -17,21 +16,25 @@ import java.util.List;
  */
 public class RealReceiver extends ParsePushBroadcastReceiver {
 
+    /**
+     * Method overridden of class @ParsePushBroadcastReceiver to receive a Push Notification and handle it here.
+     * @param context
+     * @param intent
+     */
     @Override
     protected void onPushReceive(Context context, Intent intent) {
-        if(isAppForground(context)) {
+        if(isAppForeground(context)) {
             try {
                 super.onPushReceive(context, intent);
                 JSONObject pushData = new JSONObject(intent.getStringExtra("com.parse.Data"));
                 JSONObject myObject = pushData.getJSONObject("message");
-                String name = (String) myObject.getString("name");
-                String text = (String) myObject.getString("message");
-                boolean isImage = (boolean) myObject.getBoolean("isImage");
+                String name =  myObject.getString("name");
+                String text =  myObject.getString("message");
+                boolean isImage =  myObject.getBoolean("isImage");
                 String imageUrl = "";
                 if(isImage) {
-                    imageUrl = (String) myObject.get("imageUrl");
+                    imageUrl = myObject.getString("imageUrl");
                 }
-                Bundle extras = intent.getExtras();
                 Intent i = new Intent("broadCastName");
                 // Data you need to pass to activity
                 i.putExtra("name", name);
@@ -50,7 +53,13 @@ public class RealReceiver extends ParsePushBroadcastReceiver {
          }
     }
 
-    public boolean isAppForground(Context mContext) {
+    /**
+     * Method to check if the app is in foreground or not.
+     * DISCLAIMER: WORKS WITH SOME ANDROID VERSIONS (OLD ONES)
+     * @param mContext
+     * @return
+     */
+    public boolean isAppForeground(Context mContext) {
 
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);

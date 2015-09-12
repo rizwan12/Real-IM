@@ -296,6 +296,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Retrieve all chat list from the Parse server in Descending order.
+     */
     public void retrieveChatList() {
         isLoading = true;
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatObject");
@@ -326,6 +329,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         });
     }
 
+    /**
+     * Create Aray list of chat objects which can be passed later to the List Adapter.
+     * @param list of ParseObject
+     * @return ArrayList of ChatObjects
+     */
     private ArrayList<ChatObject> createChatList(List<ParseObject> list) {
         ArrayList<ChatObject> chatList = new ArrayList<ChatObject>();
         for(int count = 0; count < list.size(); count++) {
@@ -345,6 +353,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         return chatList;
     }
 
+    /**
+     * Send a Single Push notification to all the connected devices.
+     * It will send a push notification to all the devices except own device.
+     * @param ChatObject object
+     */
     private void sendPushNotification(ChatObject object) {
         try {
             JSONObject data = null;
@@ -355,7 +368,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
             }
 
             ParseQuery query = ParseInstallation.getQuery();
-            Toast.makeText(mContext, "Parse ID: " + ParseInstallation.getCurrentInstallation().getInstallationId(), Toast.LENGTH_LONG).show();
             query.whereNotEqualTo("installationId", ParseInstallation.getCurrentInstallation().getInstallationId());
             ParsePush push = new ParsePush();
             push.setChannel(Constants.CHANNEL_NAME);
@@ -368,11 +380,18 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+    /**
+     * After writing a message, this methid is used to hide keyboard.
+     */
     private void hideKeyboard() {
         final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
     }
 
+    /**
+     * This method is called from the main class to add an object to the ArrayList
+     * of ChatObjects and notify Adapter to refresh itself.
+     */
     public void addObjectAndUpdate(ChatObject object) {
         if(object.getChatName().trim().equals(name.trim())) {
             // Do no do something here for now.
@@ -383,6 +402,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+    /**
+     * Intent to start taking photo with Activity Result option
+     */
     public void takePhoto() {
         Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
         File photo = new File(Environment.getExternalStorageDirectory(),  "Pic.jpg");
@@ -392,6 +414,13 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         startActivityForResult(intent, 100);
     }
 
+    /**
+     * When user returns after taking photo, this delegate method help to identify correct action.
+     * Image is retrieved and saved on parse cloud.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -407,9 +436,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                                 .getBitmap(cr, selectedImage);
                         createChatObjectWithImage(bitmap);
 
-//                        viewHolder.imageView.setImageBitmap(bitmap);
-                        Toast.makeText(getActivity(), selectedImage.toString(),
-                                Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         Toast.makeText(getActivity(), "Failed to load", Toast.LENGTH_SHORT)
                                 .show();
@@ -419,6 +445,11 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+    /**
+     * Creates a chat object to be sent to the server and save the data.
+     * It also generates a push notification.
+     * @param bitmap
+     */
     private void createChatObjectWithImage(Bitmap bitmap) {
         mProgressBar.setVisibility(View.VISIBLE);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -453,6 +484,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         });
     }
 
+    /**
+     * Method to show a dialog alert when user presses logout button or back button.
+     */
     private void createAndShowAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Are you sure you want to logout?");

@@ -23,11 +23,21 @@ public class ChatViewAdapter extends BaseAdapter {
     List<ChatObject> chatList;
     Context mContext;
 
+    /**
+     * Overloaded constructor to set all initial values.
+     * @param context
+     * @param objects
+     */
     public ChatViewAdapter(Context context, List<ChatObject> objects) {
         this.chatList = objects;
         this.mContext = context;
     }
 
+    /**
+     *
+     * Setter function to set chat list.
+     * @param chatList
+     */
     public void setChatList(List<ChatObject> chatList) {
         this.chatList = chatList;
     }

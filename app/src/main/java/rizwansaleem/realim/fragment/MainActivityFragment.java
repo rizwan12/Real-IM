@@ -290,12 +290,20 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
         dialog.show();
     }
 
+    /**
+     * Helper method to show a Toast.
+     * @param message
+     */
     private void showToastMessage(String message) {
         if(message.length() > 0) {
             Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
         }
     }
 
+    /**
+     * Call back to the main activity to move to chat screen
+     * via interface which is implemented in Main Class.
+     */
     private void moveToChatScreen() {
         if(dialog != null && dialog.isShowing()) {
             dialog.dismiss();
@@ -305,6 +313,9 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
         }
     }
 
+    /**
+     * Save username in shared preferences.
+     */
     private void saveInSharedPrefs() {
         SharedPreferences.Editor editor = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE).edit();
         editor.putString(Constants.USERNAME, mNameString);
