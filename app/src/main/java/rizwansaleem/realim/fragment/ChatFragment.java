@@ -190,6 +190,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         super.onStop();
     }
 
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -487,7 +488,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     /**
      * Method to show a dialog alert when user presses logout button or back button.
      */
-    private void createAndShowAlertDialog() {
+    public void createAndShowAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Are you sure you want to logout?");
         builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {

@@ -72,6 +72,22 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment);
+        if (currentFragment instanceof ChatFragment) {
+            ChatFragment fragment = (ChatFragment) currentFragment;
+            fragment.createAndShowAlertDialog();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
