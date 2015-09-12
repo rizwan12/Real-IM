@@ -3,6 +3,7 @@ package rizwansaleem.realim.fragment;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,6 +20,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import rizwansaleem.realim.R;
+import rizwansaleem.realim.utility.Constants;
 
 /**
  * A simple {@link android.app.Fragment} subclass.
@@ -245,8 +247,14 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
      * Initialise All UI Components
      */
     private void initUIComponents() {
-        mStartChatButton = (Button) mainView.findViewById(R.id.join_button);
-        mStartChatButton.setOnClickListener(this);
+        SharedPreferences prefs = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE);
+        String name = prefs.getString(Constants.USERNAME, null);
+        if(name == null) {
+            mStartChatButton = (Button) mainView.findViewById(R.id.join_button);
+            mStartChatButton.setOnClickListener(this);
+        } else {
+            mCallBack.onNameEntered(name);
+        }
     }
 
     /**
@@ -263,6 +271,7 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
             public void onClick(View v) {
                 if(mNameText.getText().toString().length() > 0) {
                     mNameString = mNameText.getText().toString();
+                    saveInSharedPrefs();
                     moveToChatScreen();
                 } else {
                     showToastMessage("Please Enter Name");
@@ -294,6 +303,12 @@ public class MainActivityFragment extends Fragment implements View.OnClickListen
         if(mCallBack != null) {
             mCallBack.onNameEntered(mNameString);
         }
+    }
+
+    private void saveInSharedPrefs() {
+        SharedPreferences.Editor editor = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE).edit();
+        editor.putString(Constants.USERNAME, mNameString);
+        editor.commit();
     }
 
     /**

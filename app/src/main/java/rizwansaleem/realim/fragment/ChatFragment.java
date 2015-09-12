@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,11 +25,13 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParsePush;
 import com.parse.ParseQuery;
@@ -59,8 +62,10 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     private ChatViewAdapter chatAdapter;
     private List<ChatObject> mChatList = new ArrayList<ChatObject>();
     private EditText mText;
+    private ProgressBar mProgressBar;
     private Button sendButton;
     private Uri imageUri;
+    private boolean isLoading = false;
 
     String name = "";
 
@@ -197,7 +202,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                     hideKeyboard();
                     sendPushNotification(object);
                 } else {
-                    Toast.makeText(mContext, "Please Enter SOmething", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "Please Enter Something", Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:
@@ -229,10 +234,18 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         switch (item.getItemId()) {
             case android.R.id.home:
                 // Called to pop current fragment from the fragment manager and display the home screen.
-                BackPressed();
+                if(!isLoading) {
+                    BackPressed();
+                }
                 return true;
             case R.id.action_camera:
                 takePhoto();
+                return true;
+            case R.id.action_logout:
+                SharedPreferences.Editor editor = getActivity().getSharedPreferences(Constants.MY_PREFERENCES, mContext.MODE_PRIVATE).edit();
+                editor.remove(Constants.USERNAME);
+                editor.commit();
+                BackPressed();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -281,14 +294,19 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         mText = (EditText) mainView.findViewById(R.id.chat_text);
         sendButton = (Button) mainView.findViewById(R.id.chat_send);
         sendButton.setOnClickListener(this);
+        mProgressBar = (ProgressBar) mainView.findViewById(R.id.progress);
+        mProgressBar.setVisibility(View.VISIBLE);
         retreiveChatList();
     }
 
     public void retreiveChatList() {
+        isLoading = true;
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatObject");
+        query.addDescendingOrder("CreatedAt");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> list, ParseException e) {
+                mProgressBar.setVisibility(View.GONE);
                 if (list != null) {
                     if (list.size() > 0) {
                         mChatList = createChatList(list);
@@ -297,11 +315,14 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                             public void run() {
                                 chatAdapter.setChatList(mChatList);
                                 chatAdapter.notifyDataSetChanged();
+                                isLoading = false;
                             }
                         });
+                        isLoading = false;
                     }
 
                 } else {
+                    mProgressBar.setVisibility(View.GONE);
                     Log.d("", "Error: " + e.getMessage());
                 }
             }
@@ -314,7 +335,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
             ParseObject object = list.get(count);
             String chatName = (String) object.get(Constants.CHAT_NAME);
             String chatText = (String) object.get(Constants.CHAT_TEXT);
-            ParseFile chatImage = (ParseFile) object.get(Constants.CHAT_IMAGE);//(byte[]) object.get(Constants.CHAT_IMAGE);
+            ParseFile chatImage = (ParseFile) object.get(Constants.CHAT_IMAGE);
             boolean isImage = (boolean) object.get(Constants.CHAT_IS_IMAGE);
             String imageUrl = "";
             if(isImage) {
@@ -331,12 +352,17 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
         try {
             JSONObject data = null;
             if(object.isImage()) {
-                data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "\", \"imageUrl\": \" " + object.getImageUrl() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+                data = new JSONObject("{message: {\"name\": \"" + object.getChatName() + "\", \"imageUrl\": \"" + object.getImageUrl() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
             } else {
-                data = new JSONObject("{message: {\"name\": \" " + object.getChatName() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
+                data = new JSONObject("{message: {\"name\": \"" + object.getChatName() + "\", \"message\": \"" + object.getChatText() + "\",\"isImage\": " + object.isImage() + "}}");
             }
+
+            ParseQuery query = ParseInstallation.getQuery();
+            Toast.makeText(mContext, "Parse ID: " + ParseInstallation.getCurrentInstallation().getInstallationId(), Toast.LENGTH_LONG).show();
+            query.whereNotEqualTo("installationId", ParseInstallation.getCurrentInstallation().getInstallationId());
             ParsePush push = new ParsePush();
             push.setChannel(Constants.CHANNEL_NAME);
+            push.setQuery(query);
             push.setData(data);
             push.sendInBackground();
             Log.e("xxxxxxx","Push Notification Sent");
@@ -351,7 +377,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     }
 
     public void addObjectAndUpdate(ChatObject object) {
-        if(object.getChatName().equals(name)) {
+        if(object.getChatName().trim().equals(name.trim())) {
             // Do no do something here for now.
         } else {
             mChatList.add(object);
@@ -397,12 +423,14 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
     }
 
     private void createChatObjectWithImage(Bitmap bitmap) {
+        mProgressBar.setVisibility(View.VISIBLE);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
         byte[] data = stream.toByteArray();
 
         final ParseFile file = new ParseFile("image1", data);
         final String url = file.getUrl();
+        Toast.makeText(mContext, "Saving Image. . .", Toast.LENGTH_SHORT).show();
         file.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -421,11 +449,10 @@ public class ChatFragment extends Fragment implements View.OnClickListener{
                         mChatList.add(chatObject);
                         chatAdapter.setChatList(mChatList);
                         chatAdapter.notifyDataSetChanged();
+                        mProgressBar.setVisibility(View.GONE);
                     }
                 });
             }
         });
-
-
     }
 }

@@ -17,5 +17,8 @@ public class Constants {
     public static final String  CHAT_IS_IMAGE = "chat_is_image";
     // --
     public static final String CHANNEL_NAME = "Message";
+    // --
+    public static final String  MY_PREFERENCES = "chatPreferences";
+    public static final String  USERNAME = "username";
 
 }

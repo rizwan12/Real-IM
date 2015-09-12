@@ -64,13 +64,17 @@ public class ChatViewAdapter extends BaseAdapter {
         } else {
             viewHolder = (ChatViewHolder) row.getTag();
         }
-        viewHolder.nameText.setText(chatObject.getChatName());
+        // Removing previous values
+        viewHolder.chatImage.setImageDrawable(null);
+        viewHolder.chatText.setText("");
+        viewHolder.nameText.setText("");
+
+        // Setting values
+        viewHolder.nameText.setText(chatObject.getChatName() + ":");
         if(chatObject.isImage()) {
             Picasso.with(mContext).load(chatObject.getImageUrl()).placeholder(R.drawable.placeholder).resize(600,600).centerCrop().into(viewHolder.chatImage);
-            viewHolder.chatText.setVisibility(View.GONE);
         } else {
             viewHolder.chatText.setText(chatObject.getChatText());
-            viewHolder.chatImage.setVisibility(View.GONE);
         }
         return row;
     }

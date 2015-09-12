@@ -5,6 +5,12 @@
     android:layout_height="match_parent"
     tools:context="rizwansaleem.realim.fragment.ChatFragment">
 
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"/>
+
 
     <ListView
         android:id="@+id/chat_list"
@@ -12,7 +18,9 @@
         android:layout_height="fill_parent"
         android:drawSelectorOnTop="false"
         android:layout_marginBottom="45dp"
-        android:dividerHeight="5dp" />
+        android:dividerHeight="5dp"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"/>
 
     <LinearLayout
         android:layout_width="match_parent"
